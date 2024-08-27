@@ -1,7 +1,8 @@
 <template>
-    <div>
+    <div @mousemove="updateMousePosition">
         <h1>{{ Math.round(score) }}</h1>
         <button @click="click" id="click">Click</button>
+        <div>{{ (this.autoClic/2 + this.autoClic2*5 + this.autoClic3*50) }}/sec</div>
         <div>
             <button @click="save">Save</button>
             <button @click="reset">Reset</button>
@@ -11,6 +12,10 @@
             <button @click="buyAuto2">AutoClicker 2 {{ calculatedPrice2 }} {{ autoClic2 }}</button>
             <button @click="buyAuto3">AutoClicker 3 {{ calculatedPrice3 }} {{ autoClic3 }}</button>
             <button @click="buyUpdate">Update {{ calculatedPriceUpdate }} {{ updateClick }}</button>
+        </div>
+        
+        <div v-for="popup in popups" :key="popup.id" :style="{ top: popup.y + 'px', left: popup.x + 'px' }" class="popup">
+            +{{ popup.value }}
         </div>
     </div>
 </template>
@@ -30,7 +35,10 @@ export default {
             initialPrice3: 1000,
             initialPriceUpdate: 25,
             multiplierUpdate: 2,
-            multiplier: 1.4
+            multiplier: 1.4,
+            mouseX: 0,   // Position X de la souris
+            mouseY: 0,   // Position Y de la souris
+            popups: []   // Liste des popups pour l'animation
         }
     },
     computed: {
@@ -50,6 +58,7 @@ export default {
     methods: {
         click() {
             this.score += this.updateClick;
+            this.showPopup(this.updateClick);
         },
         save() {
             const game = {
@@ -100,6 +109,22 @@ export default {
                 this.updateClick++;
                 this.save();
             }
+        },
+        updateMousePosition(event) {
+            this.mouseX = event.clientX;
+            this.mouseY = event.clientY;
+        },
+        showPopup(value) {
+            const popup = {
+                id: Date.now(),
+                x: this.mouseX+15,
+                y: this.mouseY,
+                value: value
+            };
+            this.popups.push(popup);
+            setTimeout(() => {
+                this.popups = this.popups.filter(p => p.id !== popup.id);
+            }, 1000);
         }
     },
     mounted() {
@@ -113,9 +138,9 @@ export default {
             this.updateClick = game.updateClick;
         }
         setInterval(() => {
-            this.score += this.autoClic / 10;
-            this.score += this.autoClic2 * 1;
-            this.score += this.autoClic3 * 10;
+            this.score += this.autoClic / 20; //0.5/s
+            this.score += this.autoClic2 / 2; //5/s
+            this.score += this.autoClic3 * 5; //50/s
         }, 100);
     }
 }
@@ -144,15 +169,6 @@ export default {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-@keyframes bounce {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-20px);
-    }
-}
-
 button {
     background-color: #008cba;
     color: white;
@@ -167,5 +183,24 @@ button {
 button:hover {
     background-color: #007bb5;
     transform: scale(1.05);
+}
+
+.popup {
+    position: absolute;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ff4500;
+    animation: fade 1s ease-out;
+}
+
+@keyframes fade {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
 }
 </style>
