@@ -11,7 +11,8 @@
             <button @click="buyAuto1" :style="score>=calculatedPrice1 ? 'background-color: #4caf50' : 'background-color: #f44336'">AutoClicker 1 {{ calculatedPrice1 < 1000 ? calculatedPrice1 : transformK(calculatedPrice1) }} {{ autoClic }}</button>
             <button v-if="scorePerSecond>=3" @click="buyAuto2" :style="score>=calculatedPrice2 ? 'background-color: #4caf50' : 'background-color: #f44336'">AutoClicker 2 {{ calculatedPrice2 < 1000 ? calculatedPrice2 : transformK(calculatedPrice2) }} {{ autoClic2 }}</button>
             <button v-if="scorePerSecond>=25" @click="buyAuto3" :style="score>=calculatedPrice3 ? 'background-color: #4caf50' : 'background-color: #f44336'">AutoClicker 3 {{ calculatedPrice3 < 1000 ? calculatedPrice3 : transformK(calculatedPrice3) }} {{ autoClic3 }}</button>
-            <button v-if="scorePerSecond>=5" @click="buyUpdate" :style="score>=calculatedPriceUpdate ? 'background-color: #4caf50' : 'background-color: #f44336'">Update {{ calculatedPriceUpdate < 1000 ? calculatedPriceUpdate : transformK(calculatedPriceUpdate) }} {{ updateClick }}</button>
+            <button v-if="scorePerSecond>=5" @click="buyUpdate" :style="score>=calculatedPriceUpdate ? 'background-color: #4caf50' : 'background-color: #f44336'">Update mouse click {{ calculatedPriceUpdate < 1000 ? calculatedPriceUpdate : transformK(calculatedPriceUpdate) }} {{ updateMouseClick }}</button>
+            <button v-if="autoClic>=10" @click="buyUpdateAutoClicker" :style="score>=calculatedUpdateAutoClickerPrice ? 'background-color: #4caf50' : 'background-color: #f44336'">Update AutoClicker 1 {{ calculatedUpdateAutoClickerPrice < 1000 ? calculatedUpdateAutoClickerPrice : transformK(calculatedUpdateAutoClickerPrice) }} {{ updateAutoClicker }}</button>
         </div>
         
         <div v-for="popup in popups" :key="popup.id" :style="{ top: popup.y + 'px', left: popup.x + 'px' }" class="popup">
@@ -29,16 +30,18 @@ export default {
             autoClic: 0,
             autoClic2: 0,
             autoClic3: 0,
-            updateClick: 1,
+            updateMouseClick: 1,
+            updateAutoClicker: 0,
             initialPrice1: 10,
             initialPrice2: 100,
             initialPrice3: 1000,
             initialPriceUpdate: 25,
+            initialUpdateAutoClickerPrice: 500,
             multiplierUpdate: 2,
             multiplier: 1.4,
-            mouseX: 0,   // Position X de la souris
-            mouseY: 0,   // Position Y de la souris
-            popups: []   // Liste des popups pour l'animation
+            mouseX: 0,  
+            mouseY: 0,  
+            popups: []   
         }
     },
     computed: {
@@ -52,16 +55,19 @@ export default {
             return Math.floor(this.initialPrice3 * Math.pow(this.multiplier, this.autoClic3));
         },
         calculatedPriceUpdate() {
-            return Math.floor(this.initialPriceUpdate * Math.pow(this.multiplierUpdate, this.updateClick));
+            return Math.floor(this.initialPriceUpdate * Math.pow(this.multiplierUpdate, this.updateMouseClick));
+        },
+        calculatedUpdateAutoClickerPrice() {
+            return Math.floor(this.initialUpdateAutoClickerPrice * Math.pow(this.multiplierUpdate, this.updateAutoClicker));
         },
         scorePerSecond() {
-            return this.autoClic/2 + this.autoClic2*5 + this.autoClic3*50
+            return this.autoClic*(this.updateAutoClicker+1)/2 + this.autoClic2*5 + this.autoClic3*50
         }
     },
     methods: {
         click() {
-            this.score += this.updateClick;
-            this.showPopup(this.updateClick);
+            this.score += this.updateMouseClick;
+            this.showPopup(this.updateMouseClick);
         },
         save() {
             const game = {
@@ -69,7 +75,8 @@ export default {
                 autoClic: this.autoClic,
                 autoClic2: this.autoClic2,
                 autoClic3: this.autoClic3,
-                updateClick: this.updateClick
+                updateMouseClick: this.updateMouseClick,
+                updateAutoClicker: this.updateAutoClicker
             };
             localStorage.setItem('game', JSON.stringify(game));
         },
@@ -78,7 +85,8 @@ export default {
             this.autoClic = 0;
             this.autoClic2 = 0;
             this.autoClic3 = 0;
-            this.updateClick = 1;
+            this.updateMouseClick = 1;
+            this.updateAutoClicker = 0;
             this.save();
         },
         buyAuto1() {
@@ -97,9 +105,6 @@ export default {
                 this.save();
             }
         },
-        transformK(value){
-            return (Math.round(value/100))/10+"k"
-        },
         buyAuto3() {
             const price3 = this.calculatedPrice3;
             if (this.score >= price3) {
@@ -112,9 +117,20 @@ export default {
             const priceUpdate = this.calculatedPriceUpdate;
             if (this.score >= priceUpdate) {
                 this.score -= priceUpdate;
-                this.updateClick++;
+                this.updateMouseClick++;
                 this.save();
             }
+        },
+        buyUpdateAutoClicker() {
+            const priceUpdateAutoClicker = this.calculatedUpdateAutoClickerPrice;
+            if (this.score >= priceUpdateAutoClicker) {
+                this.score -= priceUpdateAutoClicker;
+                this.updateAutoClicker++;
+                this.save();
+            }
+        },
+        transformK(value){
+            return (Math.round(value/100))/10+"k"
         },
         updateMousePosition(event) {
             this.mouseX = event.clientX;
@@ -141,10 +157,11 @@ export default {
             this.autoClic = game.autoClic;
             this.autoClic2 = game.autoClic2;
             this.autoClic3 = game.autoClic3;
-            this.updateClick = game.updateClick;
+            this.updateMouseClick = game.updateMouseClick;
+            this.updateAutoClicker = game.updateAutoClicker;
         }
         setInterval(() => {
-            this.score += this.autoClic / 20; //0.5/s
+            this.score += this.autoClic * (this.updateAutoClicker+1) / 20; //0.5/s
             this.score += this.autoClic2 / 2; //5/s
             this.score += this.autoClic3 * 5; //50/s
         }, 100);
