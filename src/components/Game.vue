@@ -1,17 +1,17 @@
 <template>
     <div @mousemove="updateMousePosition">
-        <h1>{{ Math.round(score) }}</h1>
+        <h1>{{ score < 1000 ? Math.round(score) : transformK(score) }}</h1>
         <button @click="click" id="click">Click</button>
-        <div>{{ (this.autoClic/2 + this.autoClic2*5 + this.autoClic3*50) }}/sec</div>
+        <div>{{ scorePerSecond<1000 ? scorePerSecond : transformK(scorePerSecond) }}/sec</div>
         <div>
-            <button @click="save">Save</button>
-            <button @click="reset">Reset</button>
+            <button @click="save" style="background-color: green;">Save</button>
+            <button @click="reset" style="background-color: red;">Reset</button>
         </div>
         <div id="magasin">
-            <button @click="buyAuto1">AutoClicker 1 {{ calculatedPrice1 }} {{ autoClic }}</button>
-            <button @click="buyAuto2">AutoClicker 2 {{ calculatedPrice2 }} {{ autoClic2 }}</button>
-            <button @click="buyAuto3">AutoClicker 3 {{ calculatedPrice3 }} {{ autoClic3 }}</button>
-            <button @click="buyUpdate">Update {{ calculatedPriceUpdate }} {{ updateClick }}</button>
+            <button @click="buyAuto1" :style="score>=calculatedPrice1 ? 'background-color: #4caf50' : 'background-color: #f44336'">AutoClicker 1 {{ calculatedPrice1 < 1000 ? calculatedPrice1 : transformK(calculatedPrice1) }} {{ autoClic }}</button>
+            <button v-if="scorePerSecond>=3" @click="buyAuto2" :style="score>=calculatedPrice2 ? 'background-color: #4caf50' : 'background-color: #f44336'">AutoClicker 2 {{ calculatedPrice2 < 1000 ? calculatedPrice2 : transformK(calculatedPrice2) }} {{ autoClic2 }}</button>
+            <button v-if="scorePerSecond>=25" @click="buyAuto3" :style="score>=calculatedPrice3 ? 'background-color: #4caf50' : 'background-color: #f44336'">AutoClicker 3 {{ calculatedPrice3 < 1000 ? calculatedPrice3 : transformK(calculatedPrice3) }} {{ autoClic3 }}</button>
+            <button v-if="scorePerSecond>=5" @click="buyUpdate" :style="score>=calculatedPriceUpdate ? 'background-color: #4caf50' : 'background-color: #f44336'">Update {{ calculatedPriceUpdate < 1000 ? calculatedPriceUpdate : transformK(calculatedPriceUpdate) }} {{ updateClick }}</button>
         </div>
         
         <div v-for="popup in popups" :key="popup.id" :style="{ top: popup.y + 'px', left: popup.x + 'px' }" class="popup">
@@ -53,6 +53,9 @@ export default {
         },
         calculatedPriceUpdate() {
             return Math.floor(this.initialPriceUpdate * Math.pow(this.multiplierUpdate, this.updateClick));
+        },
+        scorePerSecond() {
+            return this.autoClic/2 + this.autoClic2*5 + this.autoClic3*50
         }
     },
     methods: {
@@ -93,6 +96,9 @@ export default {
                 this.autoClic2++;
                 this.save();
             }
+        },
+        transformK(value){
+            return (Math.round(value/100))/10+"k"
         },
         buyAuto3() {
             const price3 = this.calculatedPrice3;
@@ -170,7 +176,6 @@ export default {
 }
 
 button {
-    background-color: #008cba;
     color: white;
     padding: 10px 20px;
     margin: 5px;
